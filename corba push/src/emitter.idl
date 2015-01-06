@@ -1,0 +1,18 @@
+module dialogue {
+
+
+exception notExistingPseudo { string detail; };
+
+
+	interface Emitter
+{
+
+
+ 
+		void sendMessage (in string to,in string message) raises(notExistingPseudo);
+ 
+
+	};
+
+};
+

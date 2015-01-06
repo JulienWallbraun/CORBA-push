@@ -1,0 +1,22 @@
+module dialogue {
+
+typedef sequence<string> clients;
+
+
+exception notExistingPseudo { string detail; };
+
+
+interface Receiver
+{
+
+
+ 
+void receive(in string from, in string message);
+void initClients(in clients clients);
+void addClient(in string client) raises(notExistingPseudo);
+ 
+void remClient(in string client) raises(notExistingPseudo);
+
+};
+};
+
