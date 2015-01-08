@@ -1,0 +1,14 @@
+#include<receiver.idl>
+#include<emitter.idl>
+
+module dialogue{
+interface Connection
+{
+ 
+	Emitter connect(in string pseudo, in Receiver rcv);
+ 
+	void disconnect (in string pseudo) raises(notExistingPseudo);
+
+};
+
+};
