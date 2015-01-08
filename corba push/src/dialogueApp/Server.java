@@ -4,13 +4,14 @@ import org.omg.CosNaming.NameComponent;
 import org.omg.CosNaming.NamingContext;
 import org.omg.CosNaming.NamingContextHelper;
 
-import dialogue.ConnectionHelper;
 import dialogue.Connection;
 import dialogue.Emitter;
 
 
 
 public class Server {
+	
+	static Connection_impl connectionImpl;
 
 	public static void main(String args[])
 	{
@@ -62,7 +63,7 @@ public class Server {
 		org.omg.PortableServer.POAManager manager = rootPOA.the_POAManager();
 
 		//création et activation du servant connexion
-		Connection_impl connectionImpl = new Connection_impl();
+		connectionImpl = new Connection_impl();
 		Connection connection = connectionImpl._this(orb);
 		
 		//création et activation du servant emitter

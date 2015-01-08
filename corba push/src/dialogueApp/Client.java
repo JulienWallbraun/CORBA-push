@@ -24,7 +24,6 @@ final class Client {
 
 		java.util.Properties props = System.getProperties();
 
-		int status = 0;
 		org.omg.CORBA.ORB orb = null;
 
 		try {
@@ -32,7 +31,6 @@ final class Client {
 			run(orb);
 		} catch (Exception ex) {
 			ex.printStackTrace();
-			status = 1;
 		}
 
 		if (orb != null) {
@@ -40,7 +38,6 @@ final class Client {
 				orb.destroy();
 			} catch (Exception ex) {
 				ex.printStackTrace();
-				status = 1;
 			}
 		}
 
