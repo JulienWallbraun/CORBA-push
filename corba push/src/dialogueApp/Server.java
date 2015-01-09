@@ -1,4 +1,8 @@
 package dialogueApp;
+
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import org.omg.CORBA.ORB;
 import org.omg.CosNaming.NameComponent;
 import org.omg.CosNaming.NamingContext;
@@ -7,94 +11,76 @@ import org.omg.CosNaming.NamingContextHelper;
 import dialogue.Connection;
 import dialogue.Emitter;
 
-
-
 public class Server {
-	
-	static Connection_impl connectionImpl;
 
-	public static void main(String args[])
-	{
+    private final static Logger LOGGER = Logger.getLogger(Server.class.getName());
+    static Connection_impl connectionImpl;
 
+    public static void main(String args[]) {
+        java.util.Properties props = System.getProperties();
 
-		java.util.Properties props = System.getProperties();
+        int status = 0;
 
+        ORB orb = null;
 
-		int status = 0;
+        try {
+            orb = ORB.init(args, props);
+            run(orb);
+        } catch (Exception ex) {
+            LOGGER.log(Level.WARNING, "context", ex);
+            status = 1;
+        }
 
+        if (orb != null) {
+            try {
+                orb.destroy();
+            } catch (Exception ex) {
+                LOGGER.log(Level.WARNING, "context", ex);
 
-		ORB orb = null;
+                status = 1;
+            }
+        }
 
-		try
-		{
+        System.exit(status);
+    }
 
+    static int run(ORB orb) throws Exception {
+        org.omg.CORBA.Object obj;
+        org.omg.PortableServer.POA rootPOA = org.omg.PortableServer.POAHelper.narrow(orb.resolve_initial_references("RootPOA"));
 
-			orb = ORB.init(args, props);
-			run(orb);
-		}
-		catch(Exception ex)
-		{
-			ex.printStackTrace();
-			status = 1;
-		}
+        org.omg.PortableServer.POAManager manager = rootPOA.the_POAManager();
 
-		if(orb != null)
-		{
-			try
-			{
-				orb.destroy();
-			}
-			catch(Exception ex)
-			{
-				ex.printStackTrace();
-				status = 1;
-			}
-		}
+        // crï¿½ation et activation du servant connexion
+        connectionImpl = new Connection_impl();
+        Connection connection = connectionImpl._this(orb);
 
-		System.exit(status);
-	}
+        // crï¿½ation et activation du servant emitter
+        Emitter_impl emitterImpl = new Emitter_impl(connectionImpl, null);
+        Emitter emitter = emitterImpl._this(orb);
 
+        // utilisation d'un name service
+        obj = orb.resolve_initial_references("NameService");
+        NamingContext ctx = NamingContextHelper.narrow(obj);
+        if (ctx == null) {
+            System.out.println("Le composant NameService n'est pas un repertoire");
+            return 0;
+        }
 
-	static int run(ORB orb) throws Exception
-	{
-		org.omg.CORBA.Object obj;
-		org.omg.PortableServer.POA rootPOA = org.omg.PortableServer.POAHelper.narrow(orb.resolve_initial_references("RootPOA"));
+        NameComponent[] name = new NameComponent[1];
 
-		org.omg.PortableServer.POAManager manager = rootPOA.the_POAManager();
+        // ajout du binding de type connexion dans le naming context
+        name[0] = new NameComponent("Connection", "");
+        ctx.rebind(name, connection);
 
-		//création et activation du servant connexion
-		connectionImpl = new Connection_impl();
-		Connection connection = connectionImpl._this(orb);
-		
-		//création et activation du servant emitter
-		Emitter_impl emitterImpl = new Emitter_impl(connectionImpl, null);
-		Emitter emitter = emitterImpl._this(orb);
+        // ajout du binding de type connexion dans le naming context
+        name[0] = new NameComponent("Emitter", "");
+        ctx.rebind(name, emitter);
 
-		//utilisation d'un name service
-		obj=orb.resolve_initial_references("NameService");
-		NamingContext ctx = NamingContextHelper.narrow(obj);
-		if (ctx==null)
-		{
-			System.out.println("Le composant NameService n'est pas un repertoire");
-			return 0;
-		}
+        System.out.println("Serveur dï¿½marrï¿½ normalement...");
 
-		NameComponent[] name = new NameComponent[1];
+        manager.activate();
+        orb.run();
 
-		//ajout du binding de type connexion dans le naming context
-		name[0]=new NameComponent("Connection","");
-		ctx.rebind(name,connection);
-		
-		//ajout du binding de type connexion dans le naming context
-		name[0]=new NameComponent("Emitter","");
-		ctx.rebind(name,emitter);
-
-		System.out.println("Serveur démarré normalement...");
-
-
-		manager.activate();
-		orb.run();
-
-		return 0;
-	}
+        return 0;
+    }
 }
